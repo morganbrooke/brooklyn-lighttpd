@@ -1,0 +1,56 @@
+  brooklyn.catalog:
+    version: "0.1"
+    id: lighttpd
+    name: LightTpd Node
+    iconUrl: "https://www.lighttpd.net/light_logo_170px.png"
+    itemType: entity
+    description: |
+      Security, speed, compliance, and flexibility -- all of these describe lighttpd (pron. lighty) which is rapidly redefining efficiency of a webserver; as it is designed and optimized for high performance environments. More info at https://www.lighttpd.net
+    publish:
+      license_code: Apache-2.0
+      overview: README.md
+    item:
+      type: centos-software-process
+      name: LightTpd Node
+      brooklyn.parameters:
+        - name: lighttpd.configfile
+          label: "Lighttpd Configuration File"
+          default: /etc/lighttpd/lighttpd.conf
+          description: |
+            Path to configuration file
+
+      brooklyn.config:
+        shell.env:
+          CONFIG_FILE: $brooklyn:config("lightpd.configfile")
+    
+        pre.install.command: |
+          sudo yum update -y
+    
+        install.command: |
+          sudo yum install -y lighttpd
+          sudo systemctl enable lighttpd
+
+        customize.command: |
+          # Write configuration file
+          # sudo -E tee ${CONFIG_FILE} <<-EOF_CONFIGURATION
+          # OPTIONS="${OPTIONS}"
+          # EOF_CONFIGURATION
+          echo "hello"
+    
+        launch.command: |
+          sudo systemctl start lighttpd
+    
+        checkRunning.command: |
+          pgrep lighttpd
+
+        stop.command: |
+          sudo systemctl stop lighttpd
+    
+      brooklyn.initializers:
+        - type: org.apache.brooklyn.core.effector.ssh.SshCommandEffector
+          brooklyn.config:
+            name: DisplaySlabs
+            description: |
+              Show slabs
+            command: |
+              memcached-tool 127.0.0.1:${PORT} display
